@@ -854,6 +854,7 @@ app.listen(PORT, () => {
 - **[Advanced Guide](./docs/ADVANCED-GUIDE.md)** - Patterns and best practices
 - **[Migration Guide](./docs/MIGRATION.md)** - Migrate from Axios or Fetch
 - **[TypeScript Guide](./docs/TYPESCRIPT.md)** - Type-safe usage
+- **[safeFetch](./docs/safeFetch.md)** - The `safeFetch` is a robust, production-ready HTTP client utility designed specifically for modern frontend applications
 - **[Examples](./examples)** - Real-world code examples
 
 ---

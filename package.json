@@ -1,4 +1,68 @@
 {
-  "name": "http_client",
-  "packageManager": "yarn@4.12.0"
+  "name": "@wlindabla/http_client",
+  "author": "AGBOKOUJO Franck <internationaleswebservices@gmail.com>",
+  "version": "1.0.0",
+  "type": "module",
+  "keywords": [
+    "http",
+    "client",
+    "fetch",
+    "universal",
+    "isomorphic",
+    "http-client",
+    "typescript",
+    "NodeJs",
+    "NodeJs-fetch",
+    "http-client",
+    "axios-alternative",
+    "typescript",
+    "nodejs",
+    "browser",
+    "event-driven",
+    "interceptors",
+    "circuit-breaker",
+    "symfony",
+    "microservices",
+    "rest-api",
+    "universal",
+    "isomorphic",
+    "enterprise"
+  ],
+  "packageManager": "yarn@4.12.0",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:node": "vitest run --environment node",
+    "test:browser": "vitest run --environment jsdom",
+    "test:integration": "vitest run tests/integration.test.ts",
+    "test:unit": "vitest run tests/unit",
+    "test:ci": "vitest run --coverage --reporter=junit --reporter=json --outputFile=test-results.json",
+    "build": "yarn build:cjs && yarn build:esm && yarn build:types",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:types": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --outDir dist/types",
+    "clean": "rm -rf dist coverage test-results.json",
+    "prepublishOnly": "yarn clean && yarn build && yarn test",
+    "lint": "eslint src tests --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wlindabla/event_dispatcher": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
+    "jsdom": "^28.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

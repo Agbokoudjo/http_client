@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test @wlindabla/http_client - Navigateur</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-section h2::before {
+            content: '🧪';
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .log-info {
+            color: #4fc3f7;
+        }
+
+        .log-success {
+            color: #81c784;
+            background: rgba(129, 199, 132, 0.1);
+        }
+
+        .log-error {
+            color: #e57373;
+            background: rgba(229, 115, 115, 0.1);
+        }
+
+        .log-warning {
+            color: #ffb74d;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .clear-btn {
+            background: #e57373;
+        }
+
+        .clear-btn:hover {
+            background: #ef5350;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .badge-get { background: #81c784; color: white; }
+        .badge-post { background: #4fc3f7; color: white; }
+        .badge-put { background: #ffb74d; color: white; }
+        .badge-patch { background: #ba68c8; color: white; }
+        .badge-delete { background: #e57373; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Test @wlindabla/http_client</h1>
+            <p>Démonstration en temps réel dans le navigateur</p>
+        </div>
+
+        <div class="content">
+            <!-- Section Statistiques -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-requests">0</div>
+                    <div class="stat-label">Total Requêtes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="success-requests">0</div>
+                    <div class="stat-label">Succès</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="failed-requests">0</div>
+                    <div class="stat-label">Échecs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-time">0ms</div>
+                    <div class="stat-label">Temps Moyen</div>
+                </div>
+            </div>
+
+            <!-- Section GET -->
+            <div class="test-section">
+                <h2>GET Requests <span class="badge badge-get">GET</span></h2>
+                <button onclick="testGetRequest()">🔍 GET - Récupérer des utilisateurs</button>
+                <button onclick="testGetSingleUser()">👤 GET - Utilisateur unique</button>
+                <button onclick="testGetNotFound()">❌ GET - 404 Error</button>
+            </div>
+
+            <!-- Section POST -->
+            <div class="test-section">
+                <h2>POST Requests <span class="badge badge-post">POST</span></h2>
+                <button onclick="testPostRequest()">➕ POST - Créer un utilisateur</button>
+                <button onclick="testPostWithFormData()">📋 POST - Avec FormData</button>
+            </div>
+
+            <!-- Section PUT/PATCH -->
+            <div class="test-section">
+                <h2>PUT/PATCH Requests <span class="badge badge-put">PUT</span> <span class="badge badge-patch">PATCH</span></h2>
+                <button onclick="testPutRequest()">✏️ PUT - Modifier utilisateur</button>
+                <button onclick="testPatchRequest()">🔧 PATCH - Mise à jour partielle</button>
+            </div>
+
+            <!-- Section DELETE -->
+            <div class="test-section">
+                <h2>DELETE Requests <span class="badge badge-delete">DELETE</span></h2>
+                <button onclick="testDeleteRequest()">🗑️ DELETE - Supprimer utilisateur</button>
+            </div>
+
+            <!-- Section Tests avancés -->
+            <div class="test-section">
+                <h2>Tests Avancés</h2>
+                <button onclick="testWithAuthentication()">🔐 Avec Authentication</button>
+                <button onclick="testWithTimeout()">⏱️ Avec Timeout</button>
+                <button onclick="testCancelRequest()">🚫 Annulation de requête</button>
+                <button onclick="testMultipleRequests()">🔄 Requêtes multiples</button>
+            </div>
+
+            <!-- Contrôles -->
+            <div class="test-section">
+                <h2>Contrôles</h2>
+                <button class="clear-btn" onclick="clearLogs()">🧹 Effacer les logs</button>
+                <button onclick="runAllTests()">🎯 Lancer tous les tests</button>
+            </div>
+
+            <!-- Console de logs -->
+            <div class="log-container" id="log-container">
+                <div class="log-entry log-info">📋 Prêt à tester...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ================================================================
+        // IMPLÉMENTATION DU CLIENT HTTP
+        // ================================================================
+
+        // Simple EventDispatcher
+        class SimpleEventDispatcher {
+            constructor() {
+                this.listeners = new Map();
+            }
+
+            dispatch(event, eventName) {
+                const listeners = this.listeners.get(eventName) || [];
+                for (const listener of listeners) {
+                    listener(event);
+                    if (event.isPropagationStopped?.()) break;
+                }
+                return event;
+            }
+
+            addListener(eventName, listener) {
+                if (!this.listeners.has(eventName)) {
+                    this.listeners.set(eventName, []);
+                }
+                this.listeners.get(eventName).push(listener);
+            }
+        }
+
+        
+        // HttpClientEvents
+        const HttpClientEvents = {
+            REQUEST: "http_client.request",
+            BEFORE_SEND: "http_client.before_send",
+            RESPONSE: "http_client.response",
+            ERROR: "http_client.error",
+            TERMINATE: "http_client.terminate"
+        };
+
+        
+        // Instance globale
+        const dispatcher = new SimpleEventDispatcher();
+        const delegate = new DemoFetchDelegate();
+
+        // Intercepteur pour l'authentification
+        dispatcher.addListener(HttpClientEvents.BEFORE_SEND, (event) => {
+            const token = localStorage.getItem('demo_token');
+            if (token && event.getFetchOptions) {
+                addLog(`🔑 [Auth] Ajout du token d'authentification`, 'info');
+            }
+        });
+
+        // Logger les événements
+        dispatcher.addListener(HttpClientEvents.REQUEST, (event) => {
+            stats.total++;
+            updateStats();
+            addLog(`📤 [Event] REQUEST dispatché`, 'info');
+        });
+
+        dispatcher.addListener(HttpClientEvents.RESPONSE, (event) => {
+            addLog(`📥 [Event] RESPONSE dispatché`, 'info');
+        });
+
+        dispatcher.addListener(HttpClientEvents.TERMINATE, (event) => {
+            addLog(`🏁 [Event] TERMINATE dispatché`, 'info');
+        });
+
+        // ================================================================
+        // FONCTIONS DE TEST
+        // ================================================================
+
+        window.testGetRequest = async function() {
+            addLog('🧪 Test: GET - Liste des utilisateurs', 'info');
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users');
+                const data = await response.json();
+                
+                const duration = Date.now() - startTime;
+                stats.times.push(duration);
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'GET', url: 'https://jsonplaceholder.typicode.com/users' },
+                    { statusCode: response.status, data: data.slice(0, 3) }
+                );
+                
+                addLog(`⏱️ Durée: ${duration}ms`, 'info');
+            } catch (error) {
+                delegate.requestErrored({ method: 'GET', url: '' }, error);
+            }
+        };
+
+        window.testGetSingleUser = async function() {
+            addLog('🧪 Test: GET - Utilisateur unique (ID: 1)', 'info');
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users/1');
+                const data = await response.json();
+                
+                const duration = Date.now() - startTime;
+                stats.times.push(duration);
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'GET', url: 'https://jsonplaceholder.typicode.com/users/1' },
+                    { statusCode: response.status, data }
+                );
+                
+                addLog(`⏱️ Durée: ${duration}ms`, 'info');
+            } catch (error) {
+                delegate.requestErrored({ method: 'GET', url: '' }, error);
+            }
+        };
+
+        window.testGetNotFound = async function() {
+            addLog('🧪 Test: GET - 404 Not Found', 'info');
+            
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users/999999');
+                const data = await response.json();
+                
+                delegate.requestFailedWithResponse(
+                    { method: 'GET', url: 'https://jsonplaceholder.typicode.com/users/999999' },
+                    { statusCode: response.status, data }
+                );
+            } catch (error) {
+                delegate.requestErrored({ method: 'GET', url: '' }, error);
+            }
+        };
+
+        window.testPostRequest = async function() {
+            addLog('🧪 Test: POST - Créer un utilisateur', 'info');
+            const startTime = Date.now();
+
+            const userData = {
+                name: 'Franck Agbokoudjo',
+                email: 'franck@wlindabla.com',
+                username: 'wlindabla'
+            };
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                const data = await response.json();
+                
+                const duration = Date.now() - startTime;
+                stats.times.push(duration);
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'POST', url: 'https://jsonplaceholder.typicode.com/users' },
+                    { statusCode: response.status, data }
+                );
+                
+                addLog(`⏱️ Durée: ${duration}ms`, 'info');
+            } catch (error) {
+                delegate.requestErrored({ method: 'POST', url: '' }, error);
+            }
+        };
+
+        window.testPostWithFormData = async function() {
+            addLog('🧪 Test: POST - Avec FormData', 'info');
+            
+            const formData = new FormData();
+            formData.append('title', 'Test Article');
+            formData.append('body', 'Contenu de test');
+            formData.append('userId', '1');
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'POST', url: 'https://jsonplaceholder.typicode.com/posts' },
+                    { statusCode: response.status, data }
+                );
+            } catch (error) {
+                delegate.requestErrored({ method: 'POST', url: '' }, error);
+            }
+        };
+
+        window.testPutRequest = async function() {
+            addLog('🧪 Test: PUT - Modifier utilisateur', 'info');
+            const startTime = Date.now();
+
+            const updatedUser = {
+                id: 1,
+                name: 'Franck Updated',
+                email: 'franck.updated@wlindabla.com',
+                username: 'wlindabla_updated'
+            };
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users/1', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedUser)
+                });
+                const data = await response.json();
+                
+                const duration = Date.now() - startTime;
+                stats.times.push(duration);
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'PUT', url: 'https://jsonplaceholder.typicode.com/users/1' },
+                    { statusCode: response.status, data }
+                );
+                
+                addLog(`⏱️ Durée: ${duration}ms`, 'info');
+            } catch (error) {
+                delegate.requestErrored({ method: 'PUT', url: '' }, error);
+            }
+        };
+
+        window.testPatchRequest = async function() {
+            addLog('🧪 Test: PATCH - Mise à jour partielle', 'info');
+
+            const partialUpdate = {
+                email: 'new.email@wlindabla.com'
+            };
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users/1', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(partialUpdate)
+                });
+                const data = await response.json();
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'PATCH', url: 'https://jsonplaceholder.typicode.com/users/1' },
+                    { statusCode: response.status, data }
+                );
+            } catch (error) {
+                delegate.requestErrored({ method: 'PATCH', url: '' }, error);
+            }
+        };
+
+        window.testDeleteRequest = async function() {
+            addLog('🧪 Test: DELETE - Supprimer utilisateur', 'info');
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users/1', {
+                    method: 'DELETE'
+                });
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'DELETE', url: 'https://jsonplaceholder.typicode.com/users/1' },
+                    { statusCode: response.status, data: { deleted: true } }
+                );
+            } catch (error) {
+                delegate.requestErrored({ method: 'DELETE', url: '' }, error);
+            }
+        };
+
+        window.testWithAuthentication = async function() {
+            addLog('🧪 Test: Requête avec authentification', 'info');
+            localStorage.setItem('demo_token', 'fake-jwt-token-123');
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users/1', {
+                    headers: {
+                        'Authorization': 'Bearer fake-jwt-token-123'
+                    }
+                });
+                const data = await response.json();
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'GET', url: 'https://jsonplaceholder.typicode.com/users/1' },
+                    { statusCode: response.status, data }
+                );
+            } catch (error) {
+                delegate.requestErrored({ method: 'GET', url: '' }, error);
+            }
+        };
+
+        window.testWithTimeout = async function() {
+            addLog('🧪 Test: Requête avec timeout', 'info');
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 100);
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users', {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const data = await response.json();
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'GET', url: 'https://jsonplaceholder.typicode.com/users' },
+                    { statusCode: response.status, data: data.slice(0, 2) }
+                );
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    addLog('⏱️ Requête annulée par timeout', 'warning');
+                }
+                delegate.requestErrored({ method: 'GET', url: '' }, error);
+            }
+        };
+
+        window.testCancelRequest = async function() {
+            addLog('🧪 Test: Annulation de requête', 'info');
+            
+            const controller = new AbortController();
+            
+            setTimeout(() => {
+                addLog('🚫 Annulation de la requête...', 'warning');
+                controller.abort();
+            }, 50);
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users', {
+                    signal: controller.signal
+                });
+                const data = await response.json();
+                
+                delegate.requestSucceededWithResponse(
+                    { method: 'GET', url: 'https://jsonplaceholder.typicode.com/users' },
+                    { statusCode: response.status, data }
+                );
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    addLog('✅ Requête annulée avec succès', 'success');
+                }
+            }
+        };
+
+        window.testMultipleRequests = async function() {
+            addLog('🧪 Test: Requêtes multiples en parallèle', 'info');
+            const startTime = Date.now();
+
+            try {
+                const requests = [
+                    fetch('https://jsonplaceholder.typicode.com/users/1'),
+                    fetch('https://jsonplaceholder.typicode.com/users/2'),
+                    fetch('https://jsonplaceholder.typicode.com/users/3')
+                ];
+
+                const responses = await Promise.all(requests);
+                const data = await Promise.all(responses.map(r => r.json()));
+                
+                const duration = Date.now() - startTime;
+                
+                addLog(`✅ ${data.length} requêtes terminées en ${duration}ms`, 'success');
+                addLog(`📦 Données reçues: ${data.map(d => d.name).join(', ')}`, 'info');
+                
+                stats.success += data.length;
+                stats.total += data.length;
+                updateStats();
+            } catch (error) {
+                delegate.requestErrored({ method: 'GET', url: '' }, error);
+            }
+        };
+
+        window.runAllTests = async function() {
+            addLog('🎯 Lancement de tous les tests...', 'info');
+            clearLogs();
+            
+            const tests = [
+                testGetRequest,
+                testGetSingleUser,
+                testPostRequest,
+                testPutRequest,
+                testPatchRequest,
+                testDeleteRequest
+            ];
+
+            for (const test of tests) {
+                await test();
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            addLog('🎉 Tous les tests terminés !', 'success');
+        };
+
+        
+
+        
+
+        // Message de bienvenue
+        addLog('🚀 Application initialisée avec succès', 'success');
+        addLog('💡 Cliquez sur un bouton pour tester les requêtes HTTP', 'info');
+    </script>
+</body>
+</html>

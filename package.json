@@ -2,6 +2,7 @@
   "name": "@wlindabla/http_client",
   "author": "AGBOKOUJO Franck <internationaleswebservices@gmail.com>",
   "version": "1.0.0",
+  "description": "Enterprise-grade HTTP client for Node.js and browsers. Event-driven architecture inspired by Symfony HttpKernel. Features: interceptors, retry logic, circuit breaker, caching, TypeScript support. Zero dependencies. Works everywhere.Universal HTTP client with superpowers! Event-driven lifecycle • Smart retry & timeout • Request/Response interceptors • Full TypeScript • Circuit breaker • Works in Node.js & browsers • Zero dependencies • Production-ready .Stop fighting with HTTP requests. @wlindabla/http_client gives you full control with events, interceptors, caching, and retry logic. Inspired by Symfony. TypeScript-first. Works everywhere. Built for production. Symfony HttpKernel architecture meets modern HTTP client. Event-driven lifecycle (REQUEST→BEFORE_SEND→RESPONSE→ERROR→TERMINATE). Delegates, interceptors, circuit breaker. Universal (Node.js + browsers). TypeScript. Production-grade.",
   "type": "module",
   "keywords": [
     "http",
@@ -28,7 +29,36 @@
     "isomorphic",
     "enterprise"
   ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+   "repository": {
+    "type": "git",
+    "url": "https://github.com/Agbokoudjo/http_client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Agbokoudjo/http_client/issues"
+  },
+  "homepage": "https://github.com/Agbokoudjo/http_client#readme",
   "packageManager": "yarn@4.12.0",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
@@ -39,15 +69,17 @@
     "test:integration": "vitest run tests/integration.test.ts",
     "test:unit": "vitest run tests/unit",
     "test:ci": "vitest run --coverage --reporter=junit --reporter=json --outputFile=test-results.json",
-    "build": "yarn build:cjs && yarn build:esm && yarn build:types",
+    "build": "tsup yarn build:cjs && yarn build:esm && yarn build:types",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:types": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --outDir dist/types",
     "clean": "rm -rf dist coverage test-results.json",
-    "prepublishOnly": "yarn clean && yarn build && yarn test",
+    "prepublishOnly": "yarn clean && yarn build && yarn test yarn lint",
     "lint": "eslint src tests --ext .ts",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release": "yarn build && changeset publish",
+    "prepare": "yarn build"
   },
   "dependencies": {
     "@wlindabla/event_dispatcher": "^1.0.0"
@@ -64,5 +96,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+   "publishConfig": {
+    "access": "public"
   }
 }

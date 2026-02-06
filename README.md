@@ -2,8 +2,6 @@
 
 <div align="center">
 
-![Logo](https://via.placeholder.com/150x150/667eea/ffffff?text=HTTP+Client)
-
 **Enterprise-Grade HTTP Client for Node.js and Browsers**
 
 [Features](#-key-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-real-world-examples) • [Contributing](#-contributing)
@@ -154,7 +152,6 @@ import {
 import {
     EventDispatcherInterface //if your customered Environnement EventDispatcher without forgetted implementer  EventDispatcherInterface
     BrowserEventDispatcher //for Navigator Environnement ou Customer your  EventDispatcher without forgetted implementer  EventDispatcherInterface
-    NodeEventDispatcher //for NodeJs Environnement ou Customer your  EventDispatcher without forgetted implementer  EventDispatcherInterface
 } from "@wlindabla/event_dispatcher";
 
 // 1. Setup (do this once)
@@ -279,6 +276,7 @@ import {
   HttpClientEvents,
   EventTargetType 
 } from '@wlindabla/http_client';
+
 import {
     EventDispatcherInterface //if your customered Environnement EventDispatcher without forgetted implementer  EventDispatcherInterface
     BrowserEventDispatcher //for Navigator Environnement ou Customer your  EventDispatcher without forgetted implementer  EventDispatcherInterface

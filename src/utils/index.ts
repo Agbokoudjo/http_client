@@ -31,3 +31,13 @@ export function mapStatusToResponseType(statusCode: number): MappedHttpStatus {
     if (statusCode >= 300 && statusCode < 400) return 'redirect';
     return 'error';
 }
+
+export const hasProperty = (obj: object, prop: string | number | symbol): boolean => {
+    // Check for modern support (The future standard)
+    if (typeof Object.hasOwn === 'function') {
+        return Object.hasOwn(obj, prop);
+    }
+
+    // Fallback for older environments (The secure method)
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+};

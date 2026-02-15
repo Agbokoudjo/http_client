@@ -19,7 +19,7 @@
     "removeComments": false,
     "importHelpers": true,
     "downlevelIteration": true,
-     "noEmit": false, 
+     "noEmit": true, 
 
     /* Interop Constraints */
     "esModuleInterop": true,

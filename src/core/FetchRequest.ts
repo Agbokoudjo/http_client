@@ -45,6 +45,7 @@ import {
      HttpClientEvents,
      TerminateEvent
  } from "../events";
+import { DefaulFetchDelegate } from "./DefaultFetchDelegate";
 
 export interface HttpClientInterface {
     handle(): Promise<FetchResponseInterface>;
@@ -64,7 +65,7 @@ export class FetchRequest extends Request implements HttpClientInterface {
     private _input: string | URL;
 
     public constructor(
-        private readonly fetchDelegate: FetchDelegateInterface,
+        private readonly fetchDelegate: FetchDelegateInterface=new DefaulFetchDelegate(),
         private readonly eventDispatcher: EventDispatcherInterface,
         private _fetchRequestOptions: FetchRequestOptions,
         private readonly requestType: RequestType = RequestType.MAIN,
@@ -135,6 +136,14 @@ export class FetchRequest extends Request implements HttpClientInterface {
         }
     }
     
+    public set fetchRequestOptions(_fetchRequestOptions:FetchRequestOptions){
+        this._fetchRequestOptions = _fetchRequestOptions;
+    }
+
+    public set data(_data:unknown){
+        this._fetchRequestOptions.data = _data;
+    }
+
     /**
       * Phase 1: REQUEST Event
       */
@@ -190,7 +199,6 @@ export class FetchRequest extends Request implements HttpClientInterface {
             HttpClientEvents.BEFORE_SEND
         ) as FetchRequestEvent;
 
-        // Mise à jour des options si modifiées
         this._fetchRequestOptions = {
             ...this._fetchRequestOptions,
             ...event.getFetchOptions()
@@ -222,7 +230,7 @@ export class FetchRequest extends Request implements HttpClientInterface {
         // Vérifier si event.preventDefault() a été appelé
         if (event.isDefaultPrevented()) {
             this.fetchDelegate.requestPreventedHandlingResponse(this, event.getResponse());
-        } else if (event.getResponse().succeeded || event.getResponse().serverInfo) {
+        } else if (fetchResponse.succeeded || fetchResponse.serverInfo) {
             this.fetchDelegate.requestSucceededWithResponse(this, event.getResponse());
         } else {
             this.fetchDelegate.requestFailedWithResponse(this, event.getResponse());
@@ -401,7 +409,7 @@ export async function safeFetch<K extends HttpResponseType = "json">(
     if (keepalive) {
         retryCount = 1;
         timeout = 0;
-    } else if (retryCount === 1) {
+    } else if (retryCount <2 && fetchRequestOptions.retryCount !== undefined) {
         retryCount = 3;
     }
 

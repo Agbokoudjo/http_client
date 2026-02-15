@@ -855,8 +855,7 @@ app.listen(PORT, () => {
 - **[Migration Guide](./docs/MIGRATION.md)** - Migrate from Axios or Fetch
 - **[TypeScript Guide](./docs/TYPESCRIPT.md)** - Type-safe usage
 - **[safeFetch](./docs/safeFetch.md)** - The `safeFetch` is a robust, production-ready HTTP client utility designed specifically for modern frontend applications
-- **[Examples](./examples)** - Real-world code examples
-
+- **[FetchErrorTranslator](./docs/FetchErrorTranslator)** - Enterprise-grade translation system for Fetch API errors with intelligent pattern matching, multi-language support, and configurable caching. Convert cryptic error messages into user-friendly, localized text.
 ---
 
 ## 🤝 Contributing

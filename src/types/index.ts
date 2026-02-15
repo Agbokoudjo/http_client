@@ -116,3 +116,70 @@ export interface EventTargetRequest {
     type: EventTargetType;
     instance: Window | Document | HTMLElement | EventTarget | EventEmitter| null;
 }
+
+
+/**
+ * Translation messages structure
+ * Maps translation keys to their localized strings
+ * 
+ * @example
+ * ```typescript
+ * const messages: TranslationMessages = {
+ *     'LABEL_BTN_CONFIRM': 'Confirm',
+ *     'LABEL_BTN_CANCEL': 'Cancel',
+ *     'ACTION_PENDING_TITLE': 'Processing...'
+ * };
+ * ```
+ */
+export type TranslationMessages = Record<string, string>;
+
+/**
+ * Language-specific translation structure
+ * Maps language codes to their translation messages
+ * 
+ * @example
+ * ```typescript
+ * const translations: LanguageTranslations = {
+ *     en: {
+ *         'AbortError': 'Request timed out',
+ *         'TypeError': 'Network error'
+ *     },
+ *     fr: {
+ *         'AbortError': 'La requête a expiré',
+ *         'TypeError': 'Erreur réseau'
+ *     }
+ * };
+ * ```
+ */
+export type LanguageTranslations = Record<string, TranslationMessages>;
+
+/**
+ * Error translations structure
+ * Maps language codes to error name/message pairs
+ * 
+ * @example
+ * ```typescript
+ * const translations: ErrorTranslations = {
+ *     en: {
+ *         'AbortError': 'Request timed out',
+ *         'NetworkError': 'Network error occurred'
+ *     },
+ *     fr: {
+ *         'AbortError': 'La requête a expiré',
+ *         'NetworkError': 'Erreur réseau'
+ *     }
+ * };
+ * ```
+ */
+export type ErrorTranslations = Record<string, TranslationMessages>;
+
+/**
+ * Pattern matching configuration
+ */
+export interface ErrorPattern {
+    /** Keywords to match in error message */
+    keywords: string[];
+    /** Error key to use when matched */
+    errorKey: string;
+}
+

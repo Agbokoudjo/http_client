@@ -21,7 +21,7 @@
  * @version 1.0.0
  * @license MIT
  */
-
+//src/core/FetchErrorTranslator.ts
 import {
     ErrorTranslations,
     ErrorPattern,
@@ -736,4 +736,3 @@ export class FetchErrorTranslator implements ConfigCacheAdapterTranslation, Fetc
  * }
  * ```
  */
-export const fetchErrorTranslator = FetchErrorTranslator.getInstance();

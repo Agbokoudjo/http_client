@@ -1,23 +1,23 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-    entry: ['src/**/*.ts',],
+    entry: {
+        index: 'src/index.ts',
+        core: 'src/core/index.ts',
+        contracts: 'src/contracts/index.ts',
+        types: 'src/types/index.ts',
+        events: 'src/events/index.ts',
+    },
     format: ['cjs', 'esm'],
     dts: true,
-    // bundle: false est CRUCIAL pour garder la structure des dossiers
-    bundle: false,
+    bundle: true,
     splitting: false,
-    sourcemap: true,
     clean: true,
-    treeshake: true,
-    minify: false,
-    target: 'esnext',
-    outDir: 'dist',
-    tsconfig: './tsconfig.json',
-    // On gère proprement les extensions pour l'ESM (Node 25 apprécie le .mjs)
+    minify: false, // Recommandé pour une lib client HTTP
+    sourcemap: true,
+    // CRITIQUE : On ne bundle pas le dispatcher, on le laisse en dépendance externe
+    external: ['@wlindabla/event_dispatcher'],
     outExtension({ format }) {
-        return {
-            js: format === 'esm' ? '.mjs' : '.js',
-        };
+        return { js: format === 'esm' ? '.mjs' : '.js' };
     },
 });

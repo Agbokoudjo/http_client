@@ -9,6 +9,7 @@
  *
  * For more information, please feel free to contact the author.
  */
+//src/core/FetchResponse.ts
 import type {
     FetchResponseInterface,
     MapStatusToResponseTypeInterface

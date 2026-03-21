@@ -9,8 +9,8 @@
  *
  * For more information, please feel free to contact the author.
  */
-
-import { EventEmitter } from "events";
+//src/types/index.ts
+import type { EventEmitter } from "events";
 
 /**
  * Mapping between response type strings and their corresponding TypeScript types

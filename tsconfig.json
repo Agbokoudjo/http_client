@@ -18,7 +18,7 @@
      "rootDir": "./src",  
     "removeComments": false,
     "importHelpers": true,
-    "downlevelIteration": true,
+    "ignoreDeprecations": "6.0",
      "noEmit": true, 
 
     /* Interop Constraints */
@@ -35,7 +35,7 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-
+    "types": ["node"],
     /* Completeness */
     "skipLibCheck": true
   },

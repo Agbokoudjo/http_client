@@ -112,7 +112,7 @@
     "release": "yarn build && changeset publish"
   },
   "dependencies": {
-    "@wlindabla/event_dispatcher": "^1.2.0"
+    "@wlindabla/event_dispatcher": "^1.2.1"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

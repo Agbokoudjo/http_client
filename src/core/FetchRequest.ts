@@ -108,10 +108,6 @@ export class FetchRequest extends Request implements HttpClientInterface {
                         this._fetchRequestOptions.signal = this._abortController.signal;
                     }
 
-                    if (this._fetchRequestOptions.url !== this._input) {
-                        this._fetchRequestOptions.url=this._input ; 
-                    }
-
                     fetchResponse = await safeFetch(this._fetchRequestOptions);
                 }
             }

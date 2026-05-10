@@ -5,7 +5,7 @@
     "email": "internationaleswebservices@gmail.com",
     "company": "INTERNATIONALES WEB APPS & SERVICES"
   },
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Enterprise-grade HTTP client for Node.js and browsers. Event-driven architecture inspired by Symfony HttpKernel. Features: interceptors, retry logic, circuit breaker, caching, TypeScript support. Zero dependencies. Works everywhere.Universal HTTP client with superpowers! Event-driven lifecycle • Smart retry & timeout • Request/Response interceptors • Full TypeScript • Circuit breaker • Works in Node.js & browsers • Zero dependencies • Production-ready .Stop fighting with HTTP requests. @wlindabla/http_client gives you full control with events, interceptors, caching, and retry logic. Inspired by Symfony. TypeScript-first. Works everywhere. Built for production. Symfony HttpKernel architecture meets modern HTTP client. Event-driven lifecycle (REQUEST→BEFORE_SEND→RESPONSE→ERROR→TERMINATE). Delegates, interceptors, circuit breaker. Universal (Node.js + browsers). TypeScript. Production-grade.",
   "type": "module",
   "keywords": [
@@ -82,6 +82,11 @@
       "import": "./dist/types.mjs",
       "require": "./dist/types.js"
     },
+    "./exceptions": {
+      "types": "./dist/exceptions.d.ts",
+      "import": "./dist/exceptions.mjs",
+      "require": "./dist/exceptions.js"
+    },
     "./events": {
       "types": "./dist/events.d.ts",
       "import": "./dist/events.mjs",
@@ -129,5 +134,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "sideEffects":false
 }

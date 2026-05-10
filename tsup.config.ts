@@ -7,6 +7,7 @@ export default defineConfig({
         contracts: 'src/contracts/index.ts',
         types: 'src/types/index.ts',
         events: 'src/events/index.ts',
+        exceptions: 'src/exceptions/index.ts'
     },
     format: ['cjs', 'esm'],
     dts: true,

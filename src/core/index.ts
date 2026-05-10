@@ -1,4 +1,22 @@
 //src/core/index.ts
-export * from "./FetchResponse";
-export * from "./FetchRequest";
-export * from "./FetchErrorTranslator";
+export {
+    FetchResponse,
+    MapStatusToResponseType,
+    HttpResponse,
+    parseHttpErrorResponse,
+    responseTypeHandle,
+} from "./FetchResponse";
+export {
+    FetchRequest,
+    HttpFetchError,
+    safeFetch
+} from "./FetchRequest";
+
+export type {
+    FetchErrorTranslatorConfig,
+    FetchErrorTranslatorInterface
+} from "./FetchErrorTranslator";
+
+export {
+    FetchErrorTranslator
+} from "./FetchErrorTranslator";

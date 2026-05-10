@@ -44,7 +44,8 @@ import {
     FetchRequestEvent,
      FetchResponseEvent,
      HttpClientEvents,
-     TerminateEvent
+     TerminateEvent,
+    FetchBeforeSendEvent
  } from "../events";
 import { DefaulFetchDelegate } from "./DefaultFetchDelegate";
 
@@ -107,6 +108,10 @@ export class FetchRequest extends Request implements HttpClientInterface {
                         this._fetchRequestOptions.signal = this._abortController.signal;
                     }
 
+                    if (this._fetchRequestOptions.url !== this._input) {
+                        this._fetchRequestOptions.url=this._input ; 
+                    }
+
                     fetchResponse = await safeFetch(this._fetchRequestOptions);
                 }
             }
@@ -141,6 +146,10 @@ export class FetchRequest extends Request implements HttpClientInterface {
         this._fetchRequestOptions = _fetchRequestOptions;
     }
 
+    public get FetchRequestOptions(): FetchRequestOptions{
+        return this._fetchRequestOptions ;
+    }
+
     public set data(_data:unknown){
         this._fetchRequestOptions.data = _data;
     }
@@ -171,40 +180,39 @@ export class FetchRequest extends Request implements HttpClientInterface {
         ) as FetchRequestEvent;
 
         this._input = event.getUrl();
-
         // Si preventDefault() a été appelé, attendre la résolution manuelle
         if (event.isDefaultPrevented()) {
             await requestInterception;
         }
-
         return event;
     }
 
     /**
      * Phase 2: BEFORE_SEND Event
+     * 
+     * Dispatches a {@link FetchBeforeSendEvent} instead of {@link FetchRequestEvent}.
+     * This enforces the semantic distinction: listeners on BEFORE_SEND can only
+     * modify fetch options, they cannot short-circuit the request via resolve()/reject().
      */
-    private async dispatchBeforeSendEvent(): Promise<FetchRequestEvent> {
+    private async dispatchBeforeSendEvent(): Promise<FetchBeforeSendEvent> {
         const event = this.eventDispatcher.dispatch(
-            new FetchRequestEvent(
+            new FetchBeforeSendEvent(        // <-- was: FetchRequestEvent
                 this,
                 this._input,
                 this._fetchRequestOptions,
-                this._resolveRequestPromise,
-                this._rejectRequestPromise,
                 this.requestType,
-                this.eventTarget,
-                {
-                    cancelable: true
-                }
+                this.eventTarget
             ),
             HttpClientEvents.BEFORE_SEND
-        ) as FetchRequestEvent;
+        ) as FetchBeforeSendEvent;
 
         this._fetchRequestOptions = {
             ...this._fetchRequestOptions,
             ...event.getFetchOptions()
         };
 
+        // Sync URL in case a listener modified it
+        this._input = event.getUrl();
         return event;
     }
 
@@ -225,7 +233,11 @@ export class FetchRequest extends Request implements HttpClientInterface {
                     bubbles: true
                 }
             ),
-            HttpClientEvents.RESPONSE
+            HttpClientEvents.RESPONSE,
+            {
+                cancelable: true,
+                bubbles: true
+            }
         ) as FetchResponseEvent;
 
         // Vérifier si event.preventDefault() a été appelé
@@ -252,7 +264,8 @@ export class FetchRequest extends Request implements HttpClientInterface {
                 this.eventTarget,
                 { cancelable: true }
             ),
-            HttpClientEvents.ERROR
+            HttpClientEvents.ERROR,
+            { cancelable: true }
         ) as FetchRequestErrorEvent;
 
         return event;
@@ -291,7 +304,7 @@ export class FetchRequest extends Request implements HttpClientInterface {
             { cancelable: true }
         );
 
-        this.eventDispatcher.dispatch(errorEvent, HttpClientEvents.ERROR);
+        this.eventDispatcher.dispatch(errorEvent, HttpClientEvents.ERROR, { cancelable: true });
 
         return !errorEvent.isDefaultPrevented();
     }

@@ -54,7 +54,6 @@ export interface FetchResponseInterface<T extends FetchBodyData=any> extends Res
     get originalResponse(): Response;
 
     setOriginalResponse(_newResponse: Response): void;
-   
 }
 
 export interface DelegateRequestInterface {

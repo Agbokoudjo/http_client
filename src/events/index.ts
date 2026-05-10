@@ -169,7 +169,7 @@ export abstract class RequestEvent extends HttpEvent implements ResponseEventInt
         request: Request,
         requestType: RequestType = RequestType.MAIN,
         eventTarget?: EventTargetRequest,
-        customOptions?: Record<string, any>
+        customOptions?: Record<string, any> 
     ) {
         super(request, requestType);
         this.eventTarget = eventTarget || {
@@ -281,7 +281,110 @@ export class FetchRequestEvent extends RequestEvent {
     }
 
     /**
-     * Merges fetch options
+     * Short-circuits the request by resolving it with a provided value,
+     * bypassing the actual fetch call entirely.
+     * 
+     * This method is intentionally available ONLY on {@link FetchRequestEvent} (REQUEST phase),
+     * not on {@link FetchBeforeSendEvent} (BEFORE_SEND phase).
+     * 
+     * Typical use cases: cache hit, mock response, feature flag bypass.
+     * 
+     * Calling this also stops event propagation.
+     */
+    public resolve(value: unknown): void {
+        this.resolvePromise(value);
+        this.stopPropagation();
+    }
+
+    /**
+     * Short-circuits the request by rejecting it with an error.
+     * 
+     * This method is intentionally available ONLY on {@link FetchRequestEvent} (REQUEST phase),
+     * not on {@link FetchBeforeSendEvent} (BEFORE_SEND phase).
+     * 
+     * Calling this also stops event propagation.
+     */
+    public reject(reason?: any): void {
+        this.rejectPromise(reason);
+        this.stopPropagation();
+    }
+}
+
+/**
+ * Event dispatched just before the actual fetch call is made.
+ * This is the last chance to modify request options (headers, body, etc.).
+ * 
+ * Unlike {@link FetchRequestEvent}, this event does NOT allow short-circuiting
+ * the request via resolve()/reject(). Its sole purpose is technical modification
+ * of fetch options.
+ * 
+ * Typical use cases:
+ * - Injecting authentication headers (Bearer token, API key)
+ * - Adding CSRF tokens
+ * - Modifying request body encoding
+ * 
+ * @author AGBOKOUDJO Franck <internationaleswebservices@gmail.com>
+ */
+export class FetchBeforeSendEvent extends RequestEvent {
+    private _url: string | URL;
+    private _fetchOptions: FetchRequestOptions;
+
+    constructor(
+        request: Request,
+        url: string | URL,
+        fetchOptions: FetchRequestOptions,
+        requestType: RequestType = RequestType.MAIN,
+        eventTarget?: EventTargetRequest,
+        customOptions?: Record<string, any>
+    ) {
+        super(request, requestType, eventTarget, customOptions);
+        this._url = url;
+        this._fetchOptions = { ...fetchOptions };
+    }
+
+    /**
+     * Returns the URL that will be fetched.
+     */
+    public getUrl(): string | URL {
+        return this._url;
+    }
+
+    /**
+     * Overrides the URL just before the fetch call.
+     * Useful for environment-based URL rewriting (e.g., dev vs prod).
+     */
+    public setUrl(url: string | URL): void {
+        this._url = url;
+    }
+
+    /**
+     * Returns the current fetch options.
+     */
+    public getFetchOptions(): FetchRequestOptions {
+        return this._fetchOptions;
+    }
+
+    /**
+     * Replaces fetch options entirely.
+     */
+    public setFetchOptions(options: FetchRequestOptions): void {
+        this._fetchOptions = { ...options };
+    }
+
+    /**
+     * Merges additional options into the existing fetch options.
+     * Headers are deep-merged to avoid overwriting existing ones.
+     * 
+     * This is the primary method listeners should use on BEFORE_SEND.
+     * 
+     * @example
+     * ```typescript
+     * dispatcher.addListener(HttpClientEvents.BEFORE_SEND, (event: FetchBeforeSendEvent) => {
+     *   event.mergeFetchOptions({
+     *     headers: { 'Authorization': `Bearer ${token}` }
+     *   });
+     * });
+     * ```
      */
     public mergeFetchOptions(options: Partial<FetchRequestOptions>): void {
         this._fetchOptions = {
@@ -292,22 +395,6 @@ export class FetchRequestEvent extends RequestEvent {
                 ...(options.headers || {})
             }
         };
-    }
-
-    /**
-     * Resolves the fetch promise (for interceptors)
-     */
-    public resolve(value: unknown): void {
-        this.resolvePromise(value);
-        this.stopPropagation();
-    }
-
-    /**
-     * Rejects the fetch promise (for interceptors)
-     */
-    public reject(reason?: any): void {
-        this.rejectPromise(reason);
-        this.stopPropagation();
     }
 }
 

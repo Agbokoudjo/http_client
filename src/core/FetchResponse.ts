@@ -38,7 +38,7 @@ export abstract class MapStatusToResponseType implements MapStatusToResponseType
     }
 
     get succeeded(): boolean {
-        return this.statusCode >= 200 && this.statusCode <= 299;
+        return this.statusCode >= 200 && this.statusCode <300;
     }
 
     get clientError(): boolean {
@@ -55,6 +55,42 @@ export abstract class MapStatusToResponseType implements MapStatusToResponseType
 
     get failed(): boolean {
         return !this.succeeded && !this.redirected && !this.serverInfo;
+    }
+
+    /**
+    * Is the response a not found error?
+    * @final
+    */
+    public get isNotFound(): boolean {
+        return 404 === this.statusCode;
+    }
+
+    /**
+     * Is the response forbidden?
+     * @final
+     */
+    public get isForbidden(): boolean {
+        return 403 === this.statusCode;
+    }
+
+    /**
+     * Is response informative?
+     *
+     * @final
+     */
+    public get isInformational(): boolean {
+        return this.statusCode >= 100 && this.statusCode < 200;
+    }
+
+    /**
+     * Is response invalid?
+     *
+     * @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+     *
+     * @final
+     */
+    public get isInvalid(): boolean {
+        return this.statusCode < 100 || this.statusCode >= 600;
     }
 }
 

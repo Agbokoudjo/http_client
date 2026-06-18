@@ -18,7 +18,6 @@
  * @phone +229 0167 25 18 86
  * @linkedin https://www.linkedin.com/in/internationales-web-apps-services-120520193/
  * @package https://github.com/Agbokoudjo/
- * @version 1.0.0
  * @license MIT
  */
 //src/core/FetchErrorTranslator.ts

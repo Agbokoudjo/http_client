@@ -216,23 +216,23 @@ The `FetchDelegate` separates lifecycle side-effects from your business logic. T
 import { FetchDelegateInterface, FetchResponseInterface } from '@wlindabla/http_client';
 
 class MyAppDelegate implements FetchDelegateInterface {
-  prepareRequest(request: Request): void {
+  prepareRequest(request: FetchRequest): void {
     console.log('[HTTP] Preparing:', request.url);
   }
-  requestStarted(_request: Request): void {
+  requestStarted(_request: FetchRequest): void {
     document.getElementById('spinner')!.style.display = 'block';
   }
-  requestFinished(_request: Request): void {
+  requestFinished(_request: FetchRequest): void {
     document.getElementById('spinner')!.style.display = 'none';
   }
-  requestSucceededWithResponse(_req: Request, res: FetchResponseInterface): void {
+  requestSucceededWithResponse(_req: FetchRequest, res: FetchResponseInterface): void {
     console.log('[HTTP] Success — status:', res.statusCode);
   }
-  requestFailedWithResponse(_req: Request, res: FetchResponseInterface): void {
+  requestFailedWithResponse(_req: FetchRequest, res: FetchResponseInterface): void {
     console.warn('[HTTP] Failed — status:', res.statusCode);
   }
-  requestPreventedHandlingResponse(_req: Request, _res: FetchResponseInterface): void {}
-  requestErrored(_req: Request, error: Error): void {
+  requestPreventedHandlingResponse(_req: FetchRequest, _res: FetchResponseInterface): void {}
+  requestErrored(_req: FetchRequest, error: Error): void {
     console.error('[HTTP] Error:', error.message);
   }
 }

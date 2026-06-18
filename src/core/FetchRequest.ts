@@ -16,12 +16,14 @@ import {
     FetchRequestOptions,
     HttpResponseType,
     ResponseTypeMap,
-    RequestType
+    RequestType,
+    HttpMethod
 } from "../types";
 
 import {
     FetchResponseInterface,
-    FetchDelegateInterface
+    FetchDelegateInterface,
+    FetchRequestInterface
 } from "../contracts";
 
 import {
@@ -45,65 +47,61 @@ import {
      FetchResponseEvent,
      HttpClientEvents,
      TerminateEvent,
-    FetchBeforeSendEvent
+    FetchBeforeSendEvent,
  } from "../events";
 import { DefaulFetchDelegate } from "./DefaultFetchDelegate";
-
-export interface HttpClientInterface {
-    handle(): Promise<FetchResponseInterface>;
-    cancel(): void;
-}
 
 /**
  * Provides flexible methods for requesting HTTP resources synchronously or asynchronously.
  *
  * @author AGBOKOUDJO Franck <internationaleswebservices@gmail.com>
  */
-export class FetchRequest extends Request implements HttpClientInterface {
+export class FetchRequest implements FetchRequestInterface {
     private _abortController: AbortController | null = null;
     private _isCancelled: boolean = false;
     private _resolveRequestPromise: (value: unknown) => void = () => { };
     private _rejectRequestPromise: (reason?: any) => void = () => { };
-    private _input: string | URL;
-
+    private readonly fetchDelegate: FetchDelegateInterface;
+    
     public constructor(
-        private readonly fetchDelegate: FetchDelegateInterface=new DefaulFetchDelegate(),
+        _fetchDelegate: FetchDelegateInterface|undefined=undefined,
         private readonly eventDispatcher: EventDispatcherInterface,
         private _fetchRequestOptions: FetchRequestOptions,
         private readonly requestType: RequestType = RequestType.MAIN,
         private readonly eventTarget?: EventTargetRequest
-    ) {
-        super(_fetchRequestOptions.url, _fetchRequestOptions);
-        
-        this._input = this._fetchRequestOptions.url;
+    ) { 
+        this.fetchDelegate = _fetchDelegate ?? new DefaulFetchDelegate()
         this._abortController = new AbortController();
     }
 
 
     async handle(): Promise<FetchResponseInterface> {
         if (this._isCancelled) {
-            throw new HttpFetchError("Request was cancelled", this._input);
+            throw new HttpFetchError("Request was cancelled", this._fetchRequestOptions.url);
         }
 
         this.fetchDelegate.prepareRequest(this);
 
-        const requestEvent = await this.dispatchRequestEvent(); // Phase 1: REQUEST - Permet l'interception avant l'envoi
+        const requestEvent = await this.dispatchRequestEvent(); // Phase 1: REQUEST - Allows interception before sending
 
         let fetchResponse: FetchResponseInterface;
         let error: Error | null = null;
 
         try {
             this.fetchDelegate.requestStarted(this);
+            
+             if (requestEvent.getUrl() !== this._fetchRequestOptions.url) {
+                this._fetchRequestOptions.url = requestEvent.getUrl();
+            }
 
-            if (requestEvent.hasResponse()) { // Si un listener a déjà fourni une réponse, on ne fait pas la requête
+            if (requestEvent.hasResponse()) { // If a listener has already provided a response, the request is not made
                 fetchResponse = requestEvent.getResponse() as FetchResponseInterface;
             } else {
-                const beforeSendEvent = await this.dispatchBeforeSendEvent();  // Phase 2: BEFORE_SEND - Dernière chance de modifier la requête
+                const beforeSendEvent = await this.dispatchBeforeSendEvent();  // Phase 2: BEFORE_SEND - Last chance to modify the request
 
                 if (beforeSendEvent.hasResponse()) {
                     fetchResponse = beforeSendEvent.getResponse() as FetchResponseInterface;
                 } else {
-                    // Ajout du signal d'annulation
                     if (this._abortController) {
                         this._fetchRequestOptions.signal = this._abortController.signal;
                     }
@@ -112,19 +110,18 @@ export class FetchRequest extends Request implements HttpClientInterface {
                 }
             }
 
-            fetchResponse = await this.dispatchResponseEvent(fetchResponse); // Phase 3: RESPONSE - Traitement de la réponse
+            fetchResponse = await this.dispatchResponseEvent(fetchResponse); // Phase 3: RESPONSE - Response Processing
 
             return fetchResponse;
 
         } catch (err) {
             error = err as Error;
-            const errorEvent = await this.dispatchErrorEvent(error);  // Phase 4: ERROR - Gestion des erreurs
-
+            const errorEvent = await this.dispatchErrorEvent(error);  // Phase 4: ERROR - Error Handling
             if (errorEvent.isRecovered() && errorEvent.hasResponse()) {
                 fetchResponse = errorEvent.getResponse() as FetchResponseInterface;
                 error = null;
             } else {
-                if (this.willDelegateErrorHandling(error)) {
+                if (this.willDelegateErrorHandling(errorEvent)) {
                     this.fetchDelegate.requestErrored(this, error);
                 }
                 throw error;
@@ -133,7 +130,7 @@ export class FetchRequest extends Request implements HttpClientInterface {
             return fetchResponse!;
 
         } finally {
-            this.dispatchTerminateEvent(fetchResponse!, error);  // Phase 5: TERMINATE - Toujours appelé
+            this.dispatchTerminateEvent(fetchResponse!, error);  // Phase 5: TERMINATE - Always called
             this.fetchDelegate.requestFinished(this);
         }
     }
@@ -142,13 +139,23 @@ export class FetchRequest extends Request implements HttpClientInterface {
         this._fetchRequestOptions = _fetchRequestOptions;
     }
 
-    public get FetchRequestOptions(): FetchRequestOptions{
+    public getFetchRequestOptions(): FetchRequestOptions{
         return this._fetchRequestOptions ;
     }
 
     public set data(_data:unknown){
         this._fetchRequestOptions.data = _data;
     }
+
+    set headers(value: HeadersInit) {
+        this.fetchRequestOptions.headers = value;
+    }
+
+    get method():HttpMethod {
+        return this.fetchRequestOptions.methodSend ?? "GET"
+    }
+
+    get url(): string | URL { return this.fetchRequestOptions.url; }
 
     /**
       * Phase 1: REQUEST Event
@@ -162,7 +169,7 @@ export class FetchRequest extends Request implements HttpClientInterface {
         const event = this.eventDispatcher.dispatch(
             new FetchRequestEvent(
                 this,
-                this._input,
+                this._fetchRequestOptions.url,
                 this._fetchRequestOptions,
                 this._resolveRequestPromise,
                 this._rejectRequestPromise,
@@ -175,8 +182,7 @@ export class FetchRequest extends Request implements HttpClientInterface {
             HttpClientEvents.REQUEST
         ) as FetchRequestEvent;
 
-        this._input = event.getUrl();
-        // Si preventDefault() a été appelé, attendre la résolution manuelle
+        // If preventDefault() has been called, wait for manual resolution
         if (event.isDefaultPrevented()) {
             await requestInterception;
         }
@@ -192,9 +198,9 @@ export class FetchRequest extends Request implements HttpClientInterface {
      */
     private async dispatchBeforeSendEvent(): Promise<FetchBeforeSendEvent> {
         const event = this.eventDispatcher.dispatch(
-            new FetchBeforeSendEvent(        // <-- was: FetchRequestEvent
+            new FetchBeforeSendEvent(       
                 this,
-                this._input,
+                this._fetchRequestOptions.url,
                 this._fetchRequestOptions,
                 this.requestType,
                 this.eventTarget
@@ -207,8 +213,6 @@ export class FetchRequest extends Request implements HttpClientInterface {
             ...event.getFetchOptions()
         };
 
-        // Sync URL in case a listener modified it
-        this._input = event.getUrl();
         return event;
     }
 
@@ -286,50 +290,43 @@ export class FetchRequest extends Request implements HttpClientInterface {
         );
     }
 
-
     /**
-     * Détermine si l'erreur doit être déléguée
-     */
-    private willDelegateErrorHandling(error: Error): boolean {
-        // On ne délègue pas si preventDefault() a été appelé sur l'événement d'erreur
-        const errorEvent = new FetchRequestErrorEvent(
-            this,
-            error,
-            this.requestType,
-            this.eventTarget,
-            { cancelable: true }
-        );
-
-        this.eventDispatcher.dispatch(errorEvent, HttpClientEvents.ERROR, { cancelable: true });
-
+    * Determines whether the error should be delegated
+    */
+    private willDelegateErrorHandling(errorEvent: FetchRequestErrorEvent): boolean {
         return !errorEvent.isDefaultPrevented();
     }
 
     /**
-     * Annule la requête en cours
+     * Cancel the current request
      */
     public cancel(): void {
         if (!this._isCancelled && this._abortController) {
             this._isCancelled = true;
             this._abortController.abort();
-            this._rejectRequestPromise(new HttpFetchError("Request was cancelled by user", this._input));
+            this._rejectRequestPromise(
+                new HttpFetchError(
+                    "Request was cancelled by user",
+                    this._fetchRequestOptions.url  
+                )
+            );
         }
     }
 
     /**
-     * Vérifie si la requête a été annulée
+     * Check if the request has been cancelled.
      */
-    public isCancelled(): boolean {
+    public get isCancelled(): boolean {
         return this._isCancelled;
     }
+
+
 }
-
-
 
 /**
  *
-### **httpFetchHandler Function**
-The `httpFetchHandler` function is an asynchronous utility for making HTTP requests with built-in timeout handling, retry attempts, and automatic response parsing.
+### **safeFetch Function**
+The `safeFetch` function is an asynchronous utility for making HTTP requests with built-in timeout handling, retry attempts, and automatic response parsing.
 
 ### **Parameters**
 | Parameter       | Type                                  | Default Value    | Description |
@@ -362,9 +359,9 @@ The function returns a `Promise` that resolves to the requested data in the spec
  - **Important:** Do not manually stringify the data before passing it, to avoid double encoding.  
  - Example:  
    ```ts
-   httpFetchHandler({ url: "/api", methodSend: "POST", data: { name: "John" } });
+   safeFetch({ url: "/api", methodSend: "POST", data: { name: "John" } });
    ```
-   ✅ The function internally does:  
+   The function internally does:  
    ```ts
    JSON.stringify({ name: "John" });
    ```
@@ -377,7 +374,7 @@ The function returns a `Promise` that resolves to the requested data in the spec
 
 ### **Example Usage**
 ```ts
-const response = await httpFetchHandler({
+const response = await safeFetch({
 url: "https://api.example.com/data",
 methodSend: "POST",
 data: { username: "Alice" },

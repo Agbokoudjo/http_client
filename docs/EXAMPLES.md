@@ -170,17 +170,17 @@ async function getUser(id: number): Promise<User | null> {
 class AppDelegate implements FetchDelegateInterface {
   constructor(private readonly button: HTMLButtonElement) {}
 
-  prepareRequest(_req: Request): void { this.button.disabled = true; }
-  requestStarted(_req: Request): void {}
-  requestFinished(_req: Request): void { this.button.disabled = false; }
-  requestSucceededWithResponse(_req: Request, res: FetchResponseInterface): void {
+  prepareRequest(_req: FetchRequest): void { this.button.disabled = true; }
+  requestStarted(_req: FetchRequest): void {}
+  requestFinished(_req: FetchRequest): void { this.button.disabled = false; }
+  requestSucceededWithResponse(_req: FetchRequest, res: FetchResponseInterface): void {
     console.log(`[HTTP] ${_req.method} ${_req.url} → ${res.statusCode}`);
   }
-  requestFailedWithResponse(_req: Request, res: FetchResponseInterface): void {
+  requestFailedWithResponse(_req: FetchRequest, res: FetchResponseInterface): void {
     console.warn(`[HTTP] FAILED ${_req.url} → ${res.statusCode}`);
   }
-  requestPreventedHandlingResponse(_req: Request, _res: FetchResponseInterface): void {}
-  requestErrored(_req: Request, error: Error): void {
+  requestPreventedHandlingResponse(_req: FetchRequest, _res: FetchResponseInterface): void {}
+  requestErrored(_req: FetchRequest, error: Error): void {
     console.error(`[HTTP] ERROR ${_req.url}`, error.message);
   }
 }
@@ -1019,18 +1019,18 @@ export class SonataAdminDelegate implements FetchDelegateInterface {
     this.loadingEl = document.getElementById(`loading-${actionName}`);
   }
 
-  prepareRequest(_req: Request): void {}
-  requestStarted(_req: Request): void   { this.loadingEl?.classList.remove('hidden'); }
+  prepareRequest(_req: FetchRequest): void {}
+  requestStarted(_req: FetchRequest): void   { this.loadingEl?.classList.remove('hidden'); }
   requestFinished(_req: Request): void  { this.loadingEl?.classList.add('hidden'); }
 
-  requestSucceededWithResponse(_req: Request, res: FetchResponseInterface): void {
+  requestSucceededWithResponse(_req: FetchRequest, res: FetchResponseInterface): void {
     console.info(`[Sonata] ${this.actionName} succeeded:`, res.statusCode);
   }
-  requestFailedWithResponse(_req: Request, res: FetchResponseInterface): void {
+  requestFailedWithResponse(_req:FetchRequest, res: FetchResponseInterface): void {
     console.warn(`[Sonata] ${this.actionName} failed:`, res.statusCode, res.data);
   }
-  requestPreventedHandlingResponse(_req: Request, _res: FetchResponseInterface): void {}
-  requestErrored(_req: Request, error: Error): void {
+  requestPreventedHandlingResponse(_req:FetchRequest, _res: FetchResponseInterface): void {}
+  requestErrored(_req: FetchRequest, error: Error): void {
     console.error(`[Sonata] ${this.actionName} error:`, error.message);
   }
 }

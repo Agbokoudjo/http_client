@@ -5,7 +5,7 @@
     "email": "internationaleswebservices@gmail.com",
     "company": "INTERNATIONALES WEB APPS & SERVICES"
   },
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Enterprise-grade HTTP client for Node.js and browsers. Event-driven architecture inspired by Symfony HttpKernel. Features: interceptors, retry logic, circuit breaker, caching, TypeScript support. Zero dependencies. Works everywhere.Universal HTTP client with superpowers! Event-driven lifecycle • Smart retry & timeout • Request/Response interceptors • Full TypeScript • Circuit breaker • Works in Node.js & browsers • Zero dependencies • Production-ready .Stop fighting with HTTP requests. @wlindabla/http_client gives you full control with events, interceptors, caching, and retry logic. Inspired by Symfony. TypeScript-first. Works everywhere. Built for production. Symfony HttpKernel architecture meets modern HTTP client. Event-driven lifecycle (REQUEST→BEFORE_SEND→RESPONSE→ERROR→TERMINATE). Delegates, interceptors, circuit breaker. Universal (Node.js + browsers). TypeScript. Production-grade.",
   "type": "module",
   "keywords": [
@@ -41,7 +41,8 @@
     "got",
     "ky",
     "superagent",
-    "api"
+    "api",
+    "INTERNATIONALES WEB APPS & SERVICES"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -120,14 +121,14 @@
     "@wlindabla/event_dispatcher": "^1.2.2"
   },
   "devDependencies": {
-    "@types/node": "^25.6.2",
-    "@vitest/coverage-v8": "^4.1.5",
-    "@vitest/ui": "^4.1.5",
+    "@types/node": "^25.9.3",
+    "@vitest/coverage-v8": "^4.1.9",
+    "@vitest/ui": "^4.1.9",
     "jsdom": "^29.1.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
-    "vite": "^8.0.11",
-    "vitest": "^4.1.5"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -135,5 +136,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects":false
+  "sideEffects": false
 }

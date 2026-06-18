@@ -10,7 +10,15 @@
  * For more information, please feel free to contact the author.
  */
 
-import { FetchBodyData} from "../types";
+import { FetchBodyData, FetchRequestOptions } from "../types";
+
+export interface FetchRequestInterface {
+    readonly url: string | URL;
+    getFetchRequestOptions(): FetchRequestOptions;
+    readonly isCancelled: boolean;
+    handle(): Promise<FetchResponseInterface>;
+    cancel(): void;
+}
 
 export interface MapStatusToResponseTypeInterface {
 
@@ -58,22 +66,22 @@ export interface FetchResponseInterface<T extends FetchBodyData=any> extends Res
 
 export interface DelegateRequestInterface {
 
-    prepareRequest(request: Request): void;
+    prepareRequest(request: FetchRequestInterface): void;
 
-    requestStarted(_request: Request): void;
+    requestStarted(_request: FetchRequestInterface): void;
 
-    requestFinished(_request: Request): void;
+    requestFinished(_request: FetchRequestInterface): void;
 
-    requestErrored(request: Request, error: Error): void;
+    requestErrored(request: FetchRequestInterface, error: Error): void;
 }
 
 export interface DelegateResponseInterface {
 
-    requestFailedWithResponse(request: Request, fetchResponse: FetchResponseInterface): void;
+    requestFailedWithResponse(request: FetchRequestInterface, fetchResponse: FetchResponseInterface): void;
 
-    requestSucceededWithResponse(request: Request, fetchResponse: FetchResponseInterface): void;
+    requestSucceededWithResponse(request: FetchRequestInterface, fetchResponse: FetchResponseInterface): void;
 
-    requestPreventedHandlingResponse(request: Request, fetchResponse: FetchResponseInterface): void;
+    requestPreventedHandlingResponse(request: FetchRequestInterface, fetchResponse: FetchResponseInterface): void;
 }
 
 export interface FetchDelegateInterface extends DelegateResponseInterface, DelegateRequestInterface {

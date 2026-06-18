@@ -7,15 +7,34 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Event Constants — HttpClientEvents](#event-constants--httpclientevents)
-- [FetchRequestEvent — Phase 1: REQUEST](#fetchrequestevent--phase-1-request)
-- [FetchBeforeSendEvent — Phase 2: BEFORE_SEND](#fetchbeforesendevent--phase-2-before_send)
-- [FetchResponseEvent — Phase 3: RESPONSE](#fetchresponseevent--phase-3-response)
-- [FetchRequestErrorEvent — Phase 4: ERROR](#fetchrequesterrorevent--phase-4-error)
-- [TerminateEvent — Phase 5: TERMINATE](#terminateevent--phase-5-terminate)
-- [HttpEvent base class](#httpevent-base-class)
-- [Common Patterns](#common-patterns)
+- [Events Reference — @wlindabla/http\_client](#events-reference--wlindablahttp_client)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Event Constants — `HttpClientEvents`](#event-constants--httpclientevents)
+  - [`FetchRequestEvent` — Phase 1: REQUEST](#fetchrequestevent--phase-1-request)
+    - [Unique capabilities (not available on other events)](#unique-capabilities-not-available-on-other-events)
+    - [All available methods](#all-available-methods)
+    - [Examples](#examples)
+  - [`FetchBeforeSendEvent` — Phase 2: BEFORE\_SEND](#fetchbeforesendevent--phase-2-before_send)
+    - [All available methods](#all-available-methods-1)
+    - [`mergeFetchOptions` — deep merge](#mergefetchoptions--deep-merge)
+    - [Examples](#examples-1)
+  - [`FetchResponseEvent` — Phase 3: RESPONSE](#fetchresponseevent--phase-3-response)
+    - [All available methods](#all-available-methods-2)
+    - [Delegate interaction](#delegate-interaction)
+    - [Examples](#examples-2)
+  - [`FetchRequestErrorEvent` — Phase 4: ERROR](#fetchrequesterrorevent--phase-4-error)
+    - [All available methods](#all-available-methods-3)
+    - [Recovery mechanism](#recovery-mechanism)
+    - [Examples](#examples-3)
+  - [`TerminateEvent` — Phase 5: TERMINATE](#terminateevent--phase-5-terminate)
+    - [All available methods](#all-available-methods-4)
+    - [Examples](#examples-4)
+  - [`HttpEvent` base class](#httpevent-base-class)
+  - [Common Patterns](#common-patterns)
+    - [Composing multiple listeners](#composing-multiple-listeners)
+    - [Passing context with `customOptions`](#passing-context-with-customoptions)
+    - [EventTarget in Node.js with EventEmitter](#eventtarget-in-nodejs-with-eventemitter)
 
 ---
 
@@ -78,7 +97,7 @@ Both methods call `stopPropagation()` automatically.
 
 ```typescript
 // Inherited from HttpEvent
-event.getRequest(): Request
+event.getRequest(): FetchRequest
 event.getRequestType(): RequestType
 event.isMainRequest(): boolean
 event.isSubRequest(): boolean
@@ -238,7 +257,7 @@ dispatcher.addListener(HttpClientEvents.BEFORE_SEND, (event: FetchBeforeSendEven
 
 ```typescript
 // Inherited from HttpEvent
-event.getRequest(): Request
+event.getRequest(): FetchRequest
 event.getRequestType(): RequestType
 event.isMainRequest(): boolean
 event.preventDefault(): void        // suppresses delegate callbacks
@@ -310,7 +329,7 @@ dispatcher.addListener(HttpClientEvents.RESPONSE, (event: FetchResponseEvent) =>
 
 ```typescript
 // Inherited from HttpEvent / RequestEvent
-event.getRequest(): Request
+event.getRequest(): FetchRequest
 event.getRequestType(): RequestType
 event.preventDefault(): void
 event.getEventTarget(): EventTargetRequest
@@ -379,7 +398,7 @@ dispatcher.addListener(HttpClientEvents.ERROR, (event: FetchRequestErrorEvent) =
 
 ```typescript
 // Inherited from HttpEvent
-event.getRequest(): Request
+event.getRequest():FetchRequest
 event.getRequestType(): RequestType
 event.isMainRequest(): boolean
 
@@ -435,7 +454,7 @@ All events extend `HttpEvent`, which provides:
 
 ```typescript
 abstract class HttpEvent extends BaseEvent {
-  getRequest(): Request
+  getRequest(): FetchRequest
   getRequestType(): RequestType          // RequestType.MAIN or RequestType.SUB
   isMainRequest(): boolean
   isSubRequest(): boolean

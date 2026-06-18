@@ -12,7 +12,8 @@
 
 import {
     ResponseInterface,
-    FetchResponseInterface
+    FetchResponseInterface,
+    FetchRequestInterface
 } from "../contracts";
 
 import { BaseEvent } from "@wlindabla/event_dispatcher";
@@ -92,7 +93,7 @@ export abstract class HttpEvent extends BaseEvent {
      * @param requestType - Type of request (MAIN or SUB)
      */
     protected constructor(
-        private readonly request: Request,
+        private readonly request: FetchRequestInterface,
         private readonly requestType: RequestType = RequestType.MAIN
     ) {
         super();
@@ -101,7 +102,7 @@ export abstract class HttpEvent extends BaseEvent {
     /**
      * Returns the request being processed
      */
-    public getRequest(): Request {
+    public getRequest(): FetchRequestInterface {
         return this.request;
     }
 
@@ -166,7 +167,7 @@ export abstract class RequestEvent extends HttpEvent implements ResponseEventInt
     private readonly customOptions: Record<string, any>;
 
     constructor(
-        request: Request,
+        request: FetchRequestInterface,
         requestType: RequestType = RequestType.MAIN,
         eventTarget?: EventTargetRequest,
         customOptions?: Record<string, any> 
@@ -236,7 +237,7 @@ export class FetchRequestEvent extends RequestEvent {
     private readonly rejectPromise: (reason?: any) => void;
 
     constructor(
-        request: Request,
+        request: FetchRequestInterface,
         url: string | URL,
         fetchOptions: FetchRequestOptions ,
         resolvePromise: (value: unknown) => void,
@@ -330,7 +331,7 @@ export class FetchBeforeSendEvent extends RequestEvent {
     private _fetchOptions: FetchRequestOptions;
 
     constructor(
-        request: Request,
+        request: FetchRequestInterface,
         url: string | URL,
         fetchOptions: FetchRequestOptions,
         requestType: RequestType = RequestType.MAIN,
@@ -407,7 +408,7 @@ export class FetchRequestErrorEvent extends RequestEvent {
     private recovered: boolean = false;
 
     constructor(
-        request: Request,
+        request: FetchRequestInterface,
         error: Error,
         requestType: RequestType = RequestType.MAIN,
         eventTarget?: EventTargetRequest,
@@ -458,7 +459,7 @@ export class FetchResponseEvent extends HttpEvent {
     private fetchResponse: FetchResponseInterface;
 
     constructor(
-        request: Request,
+        request: FetchRequestInterface,
         fetchResponse: FetchResponseInterface,
         requestType: RequestType = RequestType.MAIN,
         private readonly eventTarget?: EventTargetRequest,
@@ -511,7 +512,7 @@ export class FetchResponseEvent extends HttpEvent {
  */
 export class TerminateEvent extends HttpEvent {
     constructor(
-        request: Request,
+        request: FetchRequestInterface,
         private readonly response: ResponseInterface | null,
         private readonly error: Error | null = null,
         requestType: RequestType = RequestType.MAIN,

@@ -119,7 +119,7 @@ const reader = (res.data as ReadableStream).getReader();
 ## `FetchRequest`
 
 ```typescript
-class FetchRequest extends Request implements HttpClientInterface
+class FetchRequest implements HttpClientInterface
 ```
 
 The main HTTP client. Extends the native `Request` class and adds the full 5-phase lifecycle event system.
@@ -219,13 +219,13 @@ response.setOriginalResponse(r: Response): void // replace raw response
 
 ```typescript
 interface FetchDelegateInterface {
-  prepareRequest(request: Request): void;
-  requestStarted(request: Request): void;
-  requestFinished(request: Request): void;
-  requestErrored(request: Request, error: Error): void;
-  requestSucceededWithResponse(request: Request, fetchResponse: FetchResponseInterface): void;
-  requestFailedWithResponse(request: Request, fetchResponse: FetchResponseInterface): void;
-  requestPreventedHandlingResponse(request: Request, fetchResponse: FetchResponseInterface): void;
+  prepareRequest(request: FetchRequest): void;
+  requestStarted(request: FetchRequest): void;
+  requestFinished(request: FetchRequest): void;
+  requestErrored(request:FetchRequest, error: Error): void;
+  requestSucceededWithResponse(request: FetchRequest, fetchResponse: FetchResponseInterface): void;
+  requestFailedWithResponse(request: FetchRequest, fetchResponse: FetchResponseInterface): void;
+  requestPreventedHandlingResponse(request: FetchRequest, fetchResponse: FetchResponseInterface): void;
 }
 ```
 

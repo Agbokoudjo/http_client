@@ -14,35 +14,36 @@
 import {
     FetchDelegateInterface,
     FetchResponseInterface,
+    FetchRequestInterface
 } from "../contracts";
 
 export class DefaulFetchDelegate implements FetchDelegateInterface {
     
-    public prepareRequest(request: Request): void {
+    public prepareRequest(request: FetchRequestInterface): void {
        console.log(request)
     }
 
-    public requestStarted(_request: Request): void {
+    public requestStarted(_request: FetchRequestInterface): void {
         console.log(_request)
     }
 
-    public requestSucceededWithResponse(request: Request, fetchResponse: FetchResponseInterface): void {
+    public requestSucceededWithResponse(request: FetchRequestInterface, fetchResponse: FetchResponseInterface): void {
         console.log(request,fetchResponse)
     }
 
-    public requestPreventedHandlingResponse(request: Request, fetchResponse: FetchResponseInterface): void {
+    public requestPreventedHandlingResponse(request: FetchRequestInterface, fetchResponse: FetchResponseInterface): void {
         console.log(request, fetchResponse)
     }
 
-    public requestFailedWithResponse(request: Request, response: FetchResponseInterface) {
+    public requestFailedWithResponse(request: FetchRequestInterface, response: FetchResponseInterface) {
         console.log(request, response)
     }
  
-    public requestErrored(request: Request, error: Error): void {
+    public requestErrored(request: FetchRequestInterface, error: Error): void {
         console.log(request,error)
     }
 
-    public requestFinished(_request: Request): void {
+    public requestFinished(_request: FetchRequestInterface): void {
         console.log(_request)
     }
 }

@@ -295,3 +295,141 @@ export class BadResponseHttp extends Error {
         ].join('\n');
     }
 }
+
+
+// src/exceptions/HttpRedirectResponseError.ts
+
+export interface HttpRedirectResponseErrorContext {
+    readonly name: string;
+    readonly message: string;
+    readonly statusCode: number;
+    /** true when the request was auto-followed (redirect: 'follow', the default) */
+    readonly wasAutoFollowed: boolean;
+    /** the final URL after the redirect (only reliable when wasAutoFollowed=true, same-origin) */
+    readonly finalUrl: string | null;
+    /** the Location header (only readable with redirect:'manual' and a non-opaque response) */
+    readonly location: string | null;
+    readonly contentType: string;
+    readonly expectedResponseType: string;
+    readonly thrownAt: string;
+    readonly stack?: string;
+}
+
+/**
+ * Thrown when a request that expected a structured payload (json, formData, …)
+ * instead landed on a redirect — either:
+ *
+ *  - a *raw* 301/302/303/307/308 status (only observable with `redirect: 'manual'`
+ *    on Node.js, or in browsers when the redirect is opaque), or
+ *  - the browser silently followed the redirect (`redirect: 'follow'`, the default)
+ *    and the final response body doesn't match the expected `responseType`.
+ *
+ * The library does **not** assume where the redirect goes — it could be a login
+ * page (expired session/token), a maintenance page, a consent/paywall screen, an
+ * A/B-test routing rule, or anything else the server decides. `finalUrl`,
+ * `location`, and `contentType` expose exactly where you ended up so *you*
+ * decide what to do with it. `looksLikeAuthRedirect()` is just one convenience
+ * heuristic for the common "expired session → login page" case — for any other
+ * destination, inspect `error.finalUrl` / `error.location` yourself.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const res = await safeFetch({ url: '/api/me', responseType: 'json' });
+ * } catch (error) {
+ *   if (error instanceof HttpRedirectResponseError) {
+ *     if (error.looksLikeAuthRedirect()) {
+ *       window.location.href = '/login';
+ *     } else {
+ *         window.location.href=error.targetRedirectUrl
+ *       // any other destination — decide based on what you actually got
+ *       console.warn('Unexpected redirect to', error.finalUrl ?? error.location);
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export class HttpRedirectResponseError extends Error {
+    public override readonly name: string = 'HttpRedirectResponseError';
+    public readonly statusCode: number;
+    public readonly wasAutoFollowed: boolean;
+    public readonly finalUrl: string | null;
+    public readonly location: string | null;
+    public readonly contentType: string;
+    public readonly expectedResponseType: string;
+    public readonly thrownAt: string;
+
+    public constructor(
+        message: string,
+        options: {
+            statusCode: number;
+            wasAutoFollowed: boolean;
+            finalUrl?: string | null;
+            location?: string | null;
+            contentType?: string;
+            expectedResponseType: string;
+        }
+    ) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+
+        this.statusCode = options.statusCode;
+        this.wasAutoFollowed = options.wasAutoFollowed;
+        this.finalUrl = options.finalUrl ?? null;
+        this.location = options.location ?? null;
+        this.contentType = options.contentType ?? '';
+        this.expectedResponseType = options.expectedResponseType;
+        this.thrownAt = new Date().toISOString();
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, HttpRedirectResponseError);
+        }
+    }
+
+    /**
+     * Heuristic for ONE common case: does this redirect look like a
+     * session/token-expiry bounce to a login page? This is a convenience
+     * shortcut, not an exhaustive classification — the redirect could just as
+     * well point to a maintenance page, a consent screen, a paywall, etc.
+     * For anything other than the login case, check `finalUrl` / `location`
+     * / `contentType` yourself.
+     */
+    public looksLikeAuthRedirect(): boolean {
+        const target = this.targetRedirectUrl.toLowerCase();
+        return /login|signin|sign-in|auth|session-expired|connexion/.test(target)
+            || this.statusCode === 401
+            || this.statusCode === 403;
+    }
+
+    public toJSON(): HttpRedirectResponseErrorContext {
+        return {
+            name: this.name,
+            message: this.message,
+            statusCode: this.statusCode,
+            wasAutoFollowed: this.wasAutoFollowed,
+            finalUrl: this.finalUrl,
+            location: this.location,
+            contentType: this.contentType,
+            expectedResponseType: this.expectedResponseType,
+            thrownAt: this.thrownAt,
+            stack: this.stack,
+        };
+    }
+
+    public get targetRedirectUrl():string{
+        return this.finalUrl ?? this.location ?? ''
+    }
+
+    public override toString(): string {
+        return [
+            `[${this.name}] ${this.message}`,
+            `  Status code   : ${this.statusCode}`,
+            `  Auto-followed : ${this.wasAutoFollowed}`,
+            `  Final URL     : ${this.finalUrl ?? 'N/A'}`,
+            `  Location      : ${this.location ?? 'N/A'}`,
+            `  Content-Type  : ${this.contentType || 'N/A'}`,
+            `  Expected type : ${this.expectedResponseType}`,
+            `  Thrown at     : ${this.thrownAt}`,
+        ].join('\n');
+    }
+}

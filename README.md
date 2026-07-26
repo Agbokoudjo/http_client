@@ -44,7 +44,7 @@ The native `fetch()` is a low-level primitive. Using it directly in production a
 - **Multi-language error translation** — English, French, Spanish, German, extensible
 - **FetchDelegate pattern** — cleanly separate request lifecycle side-effects from business logic
 - **Browser & Node.js compatible** — works everywhere the Fetch API is available
-
+- **Redirect-aware parsing** — detects auth/session redirects before they crash your JSON parsing
 ---
 
 ## Documentation
@@ -250,6 +250,8 @@ response.succeeded       // boolean — true if 2xx
 response.clientError     // boolean — true if 4xx
 response.serverError     // boolean — true if 5xx
 response.redirected      // boolean — true if response was redirected
+  ** safeFetch/FetchRequest now raise HttpRedirectResponseError instead of crashing on .json() when a redirect leads to non-JSON content. 
+  **
 response.failed          // boolean — true if not 2xx, not redirect, not 1xx
 response.ok              // boolean — native fetch .ok
 response.statusText      // string  — "OK", "Not Found"…

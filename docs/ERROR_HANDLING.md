@@ -14,7 +14,7 @@
 - [Implementing a Cache Adapter](#implementing-a-cache-adapter)
 - [Error recovery via events](#error-recovery-via-events)
 - [Full error handling flow](#full-error-handling-flow)
-
+- [HttpRedirectResponseError](#httpredirectresponseerror)
 ---
 
 ## Error types overview
@@ -26,6 +26,8 @@
 | Native `Error` | Unexpected runtime error | Via `FetchRequestErrorEvent.setError()` |
 
 HTTP 4xx / 5xx responses are **not exceptions** — they are returned as `FetchResponseInterface` objects with `clientError` or `serverError` set to `true`.
+
+HttpRedirectResponseError | Response body/status indicates a redirect (session expired, login page…) instead of the expected structured data | Not retried — surfaced immediately
 
 ---
 
@@ -114,6 +116,39 @@ try {
 ```
 
 ---
+
+## HttpRedirectResponseError
+Thrown when a request that expected a structured payload (json, formData, …) instead landed on a redirect — either:
+ 
+ - a *raw* 301/302/303/307/308 status (only observable with `redirect: 'manual'`
+     on Node.js, or in browsers when the redirect is opaque), or
+   - the browser silently followed the redirect (`redirect: 'follow'`, the default)
+     and the final response body doesn't match the expected `responseType`.
+
+ The library does **not** assume where the redirect goes — it could be a login
+   page (expired session/token), a maintenance page, a consent/paywall screen, an
+   A/B-test routing rule, or anything else the server decides. `finalUrl`,
+   `location`, and `contentType` expose exactly where you ended up so *you*
+  decide what to do with it. `looksLikeAuthRedirect()` is just one convenience
+  heuristic for the common "expired session → login page" case — for any other
+  destination, inspect `error.finalUrl` / `error.location` yourself.
+ 
+ ### @example
+  ```typescript
+     try {
+    const res = await safeFetch({ url: '/api/me', responseType: 'json' });
+  } catch (error) {
+    if (error instanceof HttpRedirectResponseError) {
+      if (error.looksLikeAuthRedirect()) {
+        window.location.href = '/login';
+      } else {
+        window.location.href=error.targetRedirectUrl
+        // any other destination — decide based on what you actually got
+        console.warn('Unexpected redirect to', error.finalUrl ?? error.location);
+      }
+    }
+  }
+  ```
 
 ## `FetchErrorTranslator`
 
@@ -431,6 +466,15 @@ try {
     console.error('Network or timeout failure:', error.message);
   } else if (error instanceof BadResponseHttp) {
     console.error('Unexpected response type:', error.toJSON());
+    else if (error instanceof HttpRedirectResponseError){
+       if (error.looksLikeAuthRedirect()) {
+        window.location.href = '/login';
+      } else {
+        window.location.href=error.targetRedirectUrl
+        // any other destination — decide based on what you actually got
+        console.warn('Unexpected redirect to', error.targetRedirectUrl);
+      }
+    }
   } else {
     console.error('Unexpected error:', error);
   }

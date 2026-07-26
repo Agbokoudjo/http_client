@@ -5,6 +5,7 @@ export {
     HttpResponse,
     parseHttpErrorResponse,
     responseTypeHandle,
+    guardAgainstUnexpectedRedirect
 } from "./FetchResponse";
 export {
     FetchRequest,

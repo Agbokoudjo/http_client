@@ -23,8 +23,11 @@ import {
 import {
     isClientError,
     isServerError,
-    isHTMLResponse
+    isHTMLResponse,
+    isJSONResponse
 } from "../utils";
+
+import { HttpRedirectResponseError } from "../exceptions";
 
 export abstract class MapStatusToResponseType implements MapStatusToResponseTypeInterface {
     protected constructor(protected readonly response: Response) { }
@@ -147,6 +150,35 @@ export class HttpResponse<T extends FetchBodyData = unknown> extends FetchRespon
     }
 }
 
+export function guardAgainstUnexpectedRedirect(responseType: HttpResponseType, response: Response): void {
+    if (responseType !== "json" && responseType !== "formData") return;
+
+    const contentType = response.headers.get("content-type") ?? "";
+    const isRawRedirectStatus = response.status >= 300 && response.status < 400 && !isJSONResponse(contentType);
+    const followedRedirectAwayFromJSON = response.redirected
+        && responseType === "json"
+        && !isJSONResponse(contentType);
+    const landedOnHTML = responseType === "json" && isHTMLResponse(contentType);
+
+    if (!isRawRedirectStatus && !followedRedirectAwayFromJSON && !landedOnHTML) return;
+
+    throw new HttpRedirectResponseError(
+        isRawRedirectStatus
+            ? `Server responded with a redirect (status ${response.status}) instead of "${responseType}" data. ` +
+              `If you use "redirect: 'manual'", handle the Location header explicitly before parsing the body.`
+            : `Request was redirected to a resource returning "${contentType || 'an unknown content-type'}" instead of "${responseType}". ` +
+              `This usually means your session/token expired and the server bounced you to a login or error page.`,
+        {
+            statusCode: response.status,
+            wasAutoFollowed: response.redirected,
+            finalUrl: response.redirected ? response.url : null,
+            location: isRawRedirectStatus ? response.headers.get("location") : null,
+            contentType,
+            expectedResponseType: responseType,
+        }
+    );
+}
+
 /**
  * Handles different response types and returns properly typed HttpResponse
  * 
@@ -170,6 +202,13 @@ export async function responseTypeHandle<K extends HttpResponseType="json">(
     responseType: K,
     response: Response
 ): Promise<FetchResponseInterface<ResponseTypeMap[K]>> {
+
+    guardAgainstUnexpectedRedirect(responseType, response);
+
+
+    if (response.status === 204 || response.headers.get("content-length") === "0") {
+        return new HttpResponse<K>(response, '' as K) as HttpResponse<ResponseTypeMap[K]>;
+    }
 
     switch (responseType) {
         case "json":
@@ -206,11 +245,6 @@ export async function responseTypeHandle<K extends HttpResponseType="json">(
 export async function parseHttpErrorResponse<K extends HttpResponseType = "text">(
     response: Response
 ): Promise<FetchResponseInterface<ResponseTypeMap[K]>> {
-
-    if (response.status === 204 || response.headers.get("content-length") === "0") {
-        return new HttpResponse<K>(response, '' as K) as HttpResponse<ResponseTypeMap[K]>;
-    }
-
     const contentType = (response.headers.get("content-type") ?? "").trim().toLowerCase();
 
     if (["application/json",

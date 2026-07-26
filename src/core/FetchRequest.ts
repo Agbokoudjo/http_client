@@ -51,6 +51,8 @@ import {
  } from "../events";
 import { DefaulFetchDelegate } from "./DefaultFetchDelegate";
 
+import { HttpRedirectResponseError } from "../exceptions";
+
 /**
  * Provides flexible methods for requesting HTTP resources synchronously or asynchronously.
  *
@@ -472,6 +474,14 @@ export async function safeFetch<K extends HttpResponseType = "json">(
 
             const isLastAttempt = attempt === retryCount - 1;
 
+             if (error instanceof HttpRedirectResponseError) {
+                // Retrying won't help: the server will keep redirecting
+                // (expired session/token, maintenance page, etc.). Surface
+                // it immediately with its full context intact.
+                console.warn(`Unexpected redirect (attempt ${attempt + 1}/${retryCount}): ${error.message}`);
+                throw error;
+            }
+            
             if (error.name === "AbortError") {
                 console.warn(`Timeout (attempt ${attempt + 1}/${retryCount})`);
 

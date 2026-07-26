@@ -23,6 +23,17 @@ export function isHTMLResponse(contentTypeResponse: string = ""): boolean {
         && contentTypeResponse.match(/^(?:text\/([^\s;,]+\b)?html|application\/xhtml\+xml)\b/) !== null
 }
 
+export function isJSONResponse(contentTypeResponse: string = ""): boolean {
+    const contentType = contentTypeResponse.trim().toLowerCase();
+    return contentType !== ""
+        && (["application/json",
+            "application/ld+json",
+            "application/problem+json",
+            "application/vnd.api+json"].some((type) => contentType.startsWith(type))
+            || contentType.includes("json")
+            || contentType.endsWith("+json"));
+}
+
 export type MappedHttpStatus = 'success' | 'info' | 'warning' | 'error' | 'redirect';
 
 export function mapStatusToResponseType(statusCode: number): MappedHttpStatus {

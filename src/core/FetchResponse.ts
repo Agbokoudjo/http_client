@@ -151,27 +151,39 @@ export class HttpResponse<T extends FetchBodyData = unknown> extends FetchRespon
 }
 
 export function guardAgainstUnexpectedRedirect(responseType: HttpResponseType, response: Response): void {
-    if (responseType !== "json" && responseType !== "formData") return;
-
     const contentType = response.headers.get("content-type") ?? "";
-    const isRawRedirectStatus = response.status >= 300 && response.status < 400 && !isJSONResponse(contentType);
-    const followedRedirectAwayFromJSON = response.redirected
-        && responseType === "json"
-        && !isJSONResponse(contentType);
-    const landedOnHTML = responseType === "json" && isHTMLResponse(contentType);
+    const isRawRedirectStatus = response.status >= 300 && response.status < 400;
+    const wasAutoFollowed = response.redirected;
 
-    if (!isRawRedirectStatus && !followedRedirectAwayFromJSON && !landedOnHTML) return;
+    let shouldThrow: boolean;
+    let structuredMismatchMessage: string | null = null;
 
-    throw new HttpRedirectResponseError(
-        isRawRedirectStatus
+    if (responseType === "json" || responseType === "formData") {
+        const rawRedirectWithWrongBody = isRawRedirectStatus && !isJSONResponse(contentType);
+        const followedRedirectAwayFromJSON = wasAutoFollowed && responseType === "json" && !isJSONResponse(contentType);
+        const landedOnHTML = responseType === "json" && isHTMLResponse(contentType);
+
+        shouldThrow = rawRedirectWithWrongBody || followedRedirectAwayFromJSON || landedOnHTML;
+        structuredMismatchMessage = isRawRedirectStatus
             ? `Server responded with a redirect (status ${response.status}) instead of "${responseType}" data. ` +
               `If you use "redirect: 'manual'", handle the Location header explicitly before parsing the body.`
             : `Request was redirected to a resource returning "${contentType || 'an unknown content-type'}" instead of "${responseType}". ` +
-              `This usually means your session/token expired and the server bounced you to a login or error page.`,
+              `Inspect error.targetRedirectUrl to see where the server sent you — session expiry, a maintenance page, a consent screen, a paywall, an A/B redirect, etc. are all possible causes.`;
+    } else {
+        shouldThrow = isRawRedirectStatus || wasAutoFollowed;
+        structuredMismatchMessage = isRawRedirectStatus
+            ? `Server responded with a redirect (status ${response.status}) instead of "${responseType}" data.`
+            : `Request was redirected before returning "${responseType}" data.`;
+    }
+
+    if (!shouldThrow) return;
+
+    throw new HttpRedirectResponseError(
+        structuredMismatchMessage as string,
         {
             statusCode: response.status,
-            wasAutoFollowed: response.redirected,
-            finalUrl: response.redirected ? response.url : null,
+            wasAutoFollowed,
+            finalUrl: wasAutoFollowed ? response.url : null,
             location: isRawRedirectStatus ? response.headers.get("location") : null,
             contentType,
             expectedResponseType: responseType,

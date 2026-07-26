@@ -5,5 +5,5 @@ export * from "./events";
 export * from "./utils";
 export * from "./cache";
 export * from "./core";
-export type { BadResponseHttpContext } from "./exceptions";
-export { BadResponseHttp } from "./exceptions";
+export type { BadResponseHttpContext,HttpRedirectResponseErrorContext } from "./exceptions";
+export { BadResponseHttp,HttpRedirectResponseError } from "./exceptions";
